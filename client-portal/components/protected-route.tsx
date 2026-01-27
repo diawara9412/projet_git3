@@ -3,33 +3,48 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { type Role, hasAnyRole } from "@/lib/rbac"
 import { Loader2 } from "lucide-react"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  allowedRoles?: string[]
+  allowedRoles?: Role[]
+  requireAuth?: boolean
 }
 
-export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { client, isAuthenticated, isLoading } = useAuth()
+/**
+ * Composant de protection de route basé sur les rôles
+ * Vérifie l'authentification et les autorisations avant d'afficher le contenu
+ */
+export function ProtectedRoute({ 
+  children, 
+  allowedRoles, 
+  requireAuth = true 
+}: ProtectedRouteProps) {
+  const { client, isLoading, isAuthenticated } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/")
-    }
-  }, [isLoading, isAuthenticated, router])
+    // Attendre la fin du chargement
+    if (isLoading) return
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated && allowedRoles) {
-      const userRole = client?.role
-      if (userRole && !allowedRoles.includes(userRole)) {
-        // User doesn't have permission for this route
-        router.push("/dashboard")
+    // Si l'authentification est requise et que l'utilisateur n'est pas authentifié
+    if (requireAuth && !isAuthenticated) {
+      router.push("/")
+      return
+    }
+
+    // Si des rôles spécifiques sont requis
+    if (allowedRoles && allowedRoles.length > 0) {
+      if (!client || !hasAnyRole(client, allowedRoles)) {
+        // Rediriger vers le dashboard avec un message d'erreur
+        router.push("/dashboard?error=unauthorized")
+        return
       }
     }
-  }, [isLoading, isAuthenticated, client, allowedRoles, router])
+  }, [isLoading, isAuthenticated, client, allowedRoles, requireAuth, router])
 
+  // Afficher un loader pendant la vérification
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -38,12 +53,16 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     )
   }
 
-  if (!isAuthenticated) {
+  // Si l'authentification est requise mais l'utilisateur n'est pas authentifié
+  if (requireAuth && !isAuthenticated) {
     return null
   }
 
-  if (allowedRoles && client?.role && !allowedRoles.includes(client.role)) {
-    return null
+  // Si des rôles spécifiques sont requis mais l'utilisateur n'a pas le bon rôle
+  if (allowedRoles && allowedRoles.length > 0) {
+    if (!client || !hasAnyRole(client, allowedRoles)) {
+      return null
+    }
   }
 
   return <>{children}</>

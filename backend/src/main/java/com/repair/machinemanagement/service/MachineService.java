@@ -17,6 +17,7 @@ public class MachineService {
     private final MachineRepository machineRepository;
     private final ClientService clientService;
     private final UserService userService;
+    private final EmailService emailService;
     
     public List<Machine> getAllMachines() {
         return machineRepository.findAll();
@@ -85,6 +86,9 @@ public class MachineService {
     public Machine updateMachine(Long id, MachineRequest request) {
         Machine machine = getMachineById(id);
         
+        // Sauvegarder l'ancien statut pour détecter les changements
+        Machine.Statut oldStatut = machine.getStatut();
+        
         if (request.getClientId() != null) {
             Client client = clientService.getClientById(request.getClientId());
             machine.setClient(client);
@@ -109,7 +113,24 @@ public class MachineService {
             machine.setStatut(request.getStatut());
         }
         
-        return machineRepository.save(machine);
+        Machine savedMachine = machineRepository.save(machine);
+        
+        // Envoyer une notification email si le statut a changé
+        if (request.getStatut() != null && oldStatut != request.getStatut()) {
+            try {
+                emailService.sendMachineStatusUpdate(machine.getClient(), savedMachine);
+                
+                // Si la machine est prête (terminée), envoyer une notification spéciale
+                if (request.getStatut() == Machine.Statut.TERMINE) {
+                    emailService.sendMachineReadyNotification(machine.getClient(), savedMachine);
+                }
+            } catch (Exception e) {
+                // Log l'erreur mais ne bloque pas la mise à jour
+                System.err.println("Erreur lors de l'envoi de l'email de notification: " + e.getMessage());
+            }
+        }
+        
+        return savedMachine;
     }
     
     public void deleteMachine(Long id) {

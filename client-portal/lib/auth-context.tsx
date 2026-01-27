@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { type Role } from "./rbac"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
 
@@ -10,7 +11,7 @@ interface Client {
   nom: string
   prenom: string
   email: string
-  role: string
+  role: Role
 }
 
 // Helper to check if user is admin
@@ -76,6 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (identifiant: string, password: string) => {
+    // Validation basique côté client
+    if (!identifiant || !password) {
+      throw new Error("Identifiant et mot de passe requis")
+    }
+
     const response = await fetch(`${API_URL}/api/auth/client/login`, {
       method: "POST",
       headers: {
