@@ -1,0 +1,348 @@
+{
+"info": {
+"_postman_id": "machine-repair-api-collection",
+"name": "Machine Repair API",
+"description": "Collection complète pour tester l'API de gestion de machines",
+"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+},
+"item": [
+{
+"name": "Authentication",
+"item": [
+{
+"name": "Client Login",
+"request": {
+"method": "POST",
+"header": [
+{
+"key": "Content-Type",
+"value": "application/json"
+}
+],
+"body": {
+"mode": "raw",
+"raw": "{\n  \"identifiant\": \"CLT-00001\",\n  \"password\": \"votre_mot_de_passe\"\n}"
+},
+"url": {
+"raw": "{{baseUrl}}/api/auth/client/login",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"auth",
+"client",
+"login"
+]
+},
+"description": "Connexion pour les clients avec identifiant ou email"
+},
+"response": []
+},
+{
+"name": "Admin/Staff Login",
+"request": {
+"method": "POST",
+"header": [
+{
+"key": "Content-Type",
+"value": "application/json"
+}
+],
+"body": {
+"mode": "raw",
+"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin_password\"\n}"
+},
+"url": {
+"raw": "{{baseUrl}}/api/auth/login",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"auth",
+"login"
+]
+},
+"description": "Connexion pour admin/secrétaire/technicien"
+},
+"response": []
+},
+{
+"name": "Verify Authentication",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/auth/verify",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"auth",
+"verify"
+]
+},
+"description": "Vérifier si l'utilisateur est authentifié"
+},
+"response": []
+},
+{
+"name": "Logout",
+"request": {
+"method": "POST",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/auth/logout",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"auth",
+"logout"
+]
+},
+"description": "Déconnexion (efface le cookie)"
+},
+"response": []
+}
+]
+},
+{
+"name": "Client",
+"item": [
+{
+"name": "Get Client Machines",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/auth/client/{{clientId}}/machines",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"auth",
+"client",
+"{{clientId}}",
+"machines"
+]
+},
+"description": "Récupérer toutes les machines d'un client"
+},
+"response": []
+},
+{
+"name": "Get Client Info",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/auth/client/{{clientId}}",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"auth",
+"client",
+"{{clientId}}"
+]
+},
+"description": "Récupérer les informations d'un client"
+},
+"response": []
+},
+{
+"name": "Change Password",
+"request": {
+"method": "POST",
+"header": [
+{
+"key": "Content-Type",
+"value": "application/json"
+}
+],
+"body": {
+"mode": "raw",
+"raw": "{\n  \"oldPassword\": \"ancien_mot_de_passe\",\n  \"newPassword\": \"Nouveau123\",\n  \"confirmPassword\": \"Nouveau123\"\n}"
+},
+"url": {
+"raw": "{{baseUrl}}/api/auth/client/{{clientId}}/change-password",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"auth",
+"client",
+"{{clientId}}",
+"change-password"
+]
+},
+"description": "Changer le mot de passe du client"
+},
+"response": []
+}
+]
+},
+{
+"name": "Machines",
+"item": [
+{
+"name": "Get All Machines",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/machines",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"machines"
+]
+},
+"description": "Récupérer toutes les machines (admin/staff)"
+},
+"response": []
+},
+{
+"name": "Get Machine by ID",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/machines/{{machineId}}",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"machines",
+"{{machineId}}"
+]
+},
+"description": "Récupérer une machine par son ID"
+},
+"response": []
+},
+{
+"name": "Get Machines by Status",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/machines/statut/EN_ATTENTE",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"machines",
+"statut",
+"EN_ATTENTE"
+]
+},
+"description": "Récupérer les machines par statut (EN_ATTENTE, EN_COURS, TERMINE, ANOMALIE, PAYE, REMIS_AU_CLIENT)"
+},
+"response": []
+},
+{
+"name": "Search Machines",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/machines/search?keyword=Dell",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"machines",
+"search"
+],
+"query": [
+{
+"key": "keyword",
+"value": "Dell"
+}
+]
+},
+"description": "Rechercher des machines par mot-clé"
+},
+"response": []
+}
+]
+},
+{
+"name": "Admin",
+"item": [
+{
+"name": "Get All Clients",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/auth/admin/clients",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"auth",
+"admin",
+"clients"
+]
+},
+"description": "Récupérer tous les clients (admin)"
+},
+"response": []
+},
+{
+"name": "Get All Machines (Admin)",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{baseUrl}}/api/auth/admin/machines",
+"host": [
+"{{baseUrl}}"
+],
+"path": [
+"api",
+"auth",
+"admin",
+"machines"
+]
+},
+"description": "Récupérer toutes les machines (admin)"
+},
+"response": []
+}
+]
+}
+],
+"variable": [
+{
+"key": "baseUrl",
+"value": "http://localhost:8080",
+"type": "string"
+},
+{
+"key": "clientId",
+"value": "1",
+"type": "string"
+},
+{
+"key": "machineId",
+"value": "1",
+"type": "string"
+}
+]
+}
