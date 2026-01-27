@@ -234,10 +234,12 @@ public class AuthController {
     private void setAuthCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);
         cookie.setHttpOnly(true);
+        // Set Secure to true in production (HTTPS required)
+        // TODO: Enable this in production: cookie.setSecure(true);
         cookie.setSecure(false); // Set to true in production with HTTPS
         cookie.setPath("/");
         cookie.setMaxAge(COOKIE_MAX_AGE);
-        cookie.setAttribute("SameSite", "Lax"); // Allows cross-site with navigation
+        cookie.setAttribute("SameSite", "Lax"); // Protection CSRF
         response.addCookie(cookie);
     }
     
@@ -247,7 +249,7 @@ public class AuthController {
     private void clearAuthCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie(JWT_COOKIE_NAME, "");
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
+        cookie.setSecure(false); // Set to true in production
         cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
