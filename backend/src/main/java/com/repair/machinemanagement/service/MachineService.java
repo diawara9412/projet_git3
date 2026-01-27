@@ -125,7 +125,8 @@ public class MachineService {
                     emailService.sendMachineReadyNotification(machine.getClient(), savedMachine);
                 }
             } catch (Exception e) {
-                // Log l'erreur mais ne bloque pas la mise à jour
+                // Log l'erreur avec un logger approprié mais ne bloque pas la mise à jour
+                // TODO: Utiliser un logger configuré (SLF4J)
                 System.err.println("Erreur lors de l'envoi de l'email de notification: " + e.getMessage());
             }
         }

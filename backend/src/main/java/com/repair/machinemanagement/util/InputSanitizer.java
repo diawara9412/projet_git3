@@ -15,13 +15,14 @@ public class InputSanitizer {
             return null;
         }
         
+        // L'ampersand doit être remplacé en dernier pour éviter le double-encodage
         return input
-            .replace("&", "&amp;")
             .replace("<", "&lt;")
             .replace(">", "&gt;")
             .replace("\"", "&quot;")
             .replace("'", "&#x27;")
-            .replace("/", "&#x2F;");
+            .replace("/", "&#x2F;")
+            .replace("&", "&amp;");
     }
     
     /**
@@ -55,8 +56,8 @@ public class InputSanitizer {
         // Convertir en minuscules et supprimer les espaces
         email = email.toLowerCase().trim();
         
-        // Vérifier le format basique (regex simple)
-        if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+        // Vérifier le format basique (regex simple) - déjà en minuscules
+        if (!email.matches("^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$")) {
             throw new IllegalArgumentException("Email invalide");
         }
         

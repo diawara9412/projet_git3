@@ -65,8 +65,14 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Ajouter des headers de sécurité
                 .headers(headers -> headers
+                        // Content Security Policy plus permissive pour compatibilité
                         .contentSecurityPolicy(csp -> csp
-                                .policyDirectives("default-src 'self'; frame-ancestors 'none'"))
+                                .policyDirectives("default-src 'self' 'unsafe-inline'; " +
+                                                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                                                "style-src 'self' 'unsafe-inline'; " +
+                                                "img-src 'self' data: https:; " +
+                                                "font-src 'self' data:; " +
+                                                "frame-ancestors 'none'"))
                         .frameOptions(frame -> frame.deny())
                 )
                 .authorizeHttpRequests(auth -> auth

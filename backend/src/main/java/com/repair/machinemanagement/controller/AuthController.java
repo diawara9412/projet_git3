@@ -230,13 +230,12 @@ public class AuthController {
     
     /**
      * Helper method to set authentication cookie
+     * Note: In production, set cookie.setSecure(true) to require HTTPS
      */
     private void setAuthCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);
         cookie.setHttpOnly(true);
-        // Set Secure to true in production (HTTPS required)
-        // TODO: Enable this in production: cookie.setSecure(true);
-        cookie.setSecure(false); // Set to true in production with HTTPS
+        cookie.setSecure(false); // TODO: Set to true in production with HTTPS
         cookie.setPath("/");
         cookie.setMaxAge(COOKIE_MAX_AGE);
         cookie.setAttribute("SameSite", "Lax"); // Protection CSRF

@@ -92,10 +92,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(
             RuntimeException ex) {
-        log.error("Runtime error: {}", ex.getMessage());
+        // Log l'erreur complète pour le debugging
+        log.error("Runtime error: {}", ex.getMessage(), ex);
         
         Map<String, String> response = new HashMap<>();
-        response.put("error", ex.getMessage());
+        // Message générique pour éviter la fuite d'informations sensibles
+        response.put("error", "Une erreur s'est produite lors du traitement de votre demande");
         
         return ResponseEntity.badRequest().body(response);
     }
