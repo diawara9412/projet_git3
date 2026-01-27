@@ -32,19 +32,28 @@ public class ClientAuthService {
      * Authentifie un client avec son identifiant/email et mot de passe.
      */
     public ClientLoginResponse login(ClientLoginRequest request) {
+        log.debug("Tentative de connexion avec identifiant: {}", request.getIdentifiant());
+        
         // Rechercher le client par email ou identifiant
         Client client = clientRepository.findByEmailOrIdentifiant(
             request.getIdentifiant(), 
             request.getIdentifiant()
-        ).orElseThrow(() -> new BadCredentialsException("Identifiant ou mot de passe incorrect"));
+        ).orElseThrow(() -> {
+            log.warn("Client non trouvé avec identifiant: {}", request.getIdentifiant());
+            return new BadCredentialsException("Identifiant ou mot de passe incorrect");
+        });
+        
+        log.debug("Client trouvé: {} ({})", client.getIdentifiant(), client.getEmail());
         
         // Vérifier si le compte est actif
         if (!client.getActive()) {
+            log.warn("Tentative de connexion sur compte désactivé: {}", client.getIdentifiant());
             throw new DisabledException("Votre compte a été désactivé. Contactez l'administration.");
         }
         
         // Vérifier le mot de passe
         if (!passwordEncoder.matches(request.getPassword(), client.getPassword())) {
+            log.warn("Mot de passe incorrect pour le client: {}", client.getIdentifiant());
             throw new BadCredentialsException("Identifiant ou mot de passe incorrect");
         }
         

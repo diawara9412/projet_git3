@@ -1,6 +1,8 @@
 package com.repair.machinemanagement.config;
 
+import com.repair.machinemanagement.entity.Client;
 import com.repair.machinemanagement.entity.User;
+import com.repair.machinemanagement.repository.ClientRepository;
 import com.repair.machinemanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
+    private final ClientRepository clientRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -34,8 +37,36 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(admin);
 
             System.out.println("✔ Administrateur créé automatiquement !");
+            System.out.println("   Email: admin@repair.com");
+            System.out.println("   Mot de passe: admin123");
         } else {
             System.out.println("✔ Administrateur déjà existant, création ignorée.");
+        }
+        
+        // Créer un client de test si aucun client n'existe
+        boolean clientExists = clientRepository.existsByIdentifiant("CLT-00001");
+        
+        if (!clientExists) {
+            Client testClient = Client.builder()
+                    .nom("Test")
+                    .prenom("Client")
+                    .adresse("456 Avenue de Test, 75002 Paris")
+                    .numero("0623456789")
+                    .email("client.test@example.com")
+                    .identifiant("CLT-00001")
+                    .password(passwordEncoder.encode("test123"))
+                    .active(true)
+                    .credentialsSent(false)
+                    .build();
+            
+            clientRepository.save(testClient);
+            
+            System.out.println("✔ Client de test créé automatiquement !");
+            System.out.println("   Identifiant: CLT-00001");
+            System.out.println("   Email: client.test@example.com");
+            System.out.println("   Mot de passe: test123");
+        } else {
+            System.out.println("✔ Client de test déjà existant, création ignorée.");
         }
     }
 }
