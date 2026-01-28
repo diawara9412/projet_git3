@@ -42,6 +42,12 @@ public class EmailService {
     @Async
     public void sendClientCredentials(Client client, String plainPassword) {
         try {
+            // Validate email address
+            if (client.getEmail() == null || client.getEmail().isBlank()) {
+                log.error("Impossible d'envoyer l'email: adresse email vide pour le client {}", client.getIdentifiant());
+                throw new IllegalArgumentException("Adresse email invalide");
+            }
+
             Context context = new Context();
             context.setVariable("clientNom", client.getNom());
             context.setVariable("clientPrenom", client.getPrenom());
@@ -50,7 +56,15 @@ public class EmailService {
             context.setVariable("appName", appName);
             context.setVariable("loginUrl", frontendUrl + "/client/login");
 
-            String htmlContent = templateEngine.process("client-credentials", context);
+            String htmlContent;
+            try {
+                htmlContent = templateEngine.process("client-credentials", context);
+            } catch (Exception e) {
+                log.error("Erreur lors du traitement du template pour le client {}: {}", 
+                    client.getIdentifiant(), e.getMessage(), e);
+                // Fallback: créer un email simple en texte brut si le template échoue
+                htmlContent = createFallbackCredentialsEmail(client, plainPassword);
+            }
 
             sendHtmlEmail(
                 client.getEmail(),
@@ -58,10 +72,39 @@ public class EmailService {
                 htmlContent
             );
 
-            log.info("Email d'identifiants envoyé à: {}", client.getEmail());
+            log.info("Email d'identifiants envoyé avec succès à: {} pour le client {}", 
+                client.getEmail(), client.getIdentifiant());
         } catch (Exception e) {
-            log.error("Erreur lors de l'envoi de l'email à {}: {}", client.getEmail(), e.getMessage());
+            log.error("Erreur lors de l'envoi de l'email au client {} ({}): {}", 
+                client.getIdentifiant(), client.getEmail(), e.getMessage(), e);
+            throw new RuntimeException("Échec de l'envoi de l'email: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Crée un email de secours simple si le template Thymeleaf échoue.
+     */
+    private String createFallbackCredentialsEmail(Client client, String plainPassword) {
+        return String.format("""
+            <html>
+            <body>
+                <h2>Bienvenue sur %s</h2>
+                <p>Bonjour %s %s,</p>
+                <p>Votre compte a été créé avec succès. Voici vos identifiants de connexion :</p>
+                <ul>
+                    <li><strong>Identifiant :</strong> %s</li>
+                    <li><strong>Mot de passe :</strong> %s</li>
+                </ul>
+                <p>Vous pouvez vous connecter à l'adresse : <a href="%s">%s</a></p>
+                <p>Cordialement,<br/>L'équipe %s</p>
+            </body>
+            </html>
+            """, 
+            appName, client.getPrenom(), client.getNom(), 
+            client.getIdentifiant(), plainPassword,
+            frontendUrl, frontendUrl,
+            appName
+        );
     }
 
     /**

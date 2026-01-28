@@ -36,7 +36,10 @@ function LoginForm() {
       await login(identifiant, password)
       router.push("/dashboard")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur de connexion")
+      // Display specific error message from backend
+      const errorMessage = err instanceof Error ? err.message : "Une erreur est survenue lors de la connexion"
+      setError(errorMessage)
+      console.error("Login error:", err)
     } finally {
       setIsSubmitting(false)
     }

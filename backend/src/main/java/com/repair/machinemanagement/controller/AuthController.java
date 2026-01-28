@@ -16,6 +16,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 @CrossOrigin(
     origins = {"http://localhost:3001", "http://localhost:3000", "http://localhost:5173", "http://localhost:5174"},
     allowCredentials = "true"
@@ -85,7 +87,10 @@ public class AuthController {
                     "role", clientResponse.getRole(),
                     "message", clientResponse.getMessage()
                 ));
-            } catch (Exception clientEx) {
+            } catch (org.springframework.security.authentication.DisabledException e) {
+                // Compte désactivé - message spécifique
+                return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+            } catch (org.springframework.security.authentication.BadCredentialsException clientEx) {
                 // Si la connexion client échoue, tenter avec les utilisateurs (admin/staff)
                 try {
                     LoginRequest staffRequest = new LoginRequest();
@@ -110,8 +115,13 @@ public class AuthController {
                     throw clientEx;
                 }
             }
+        } catch (org.springframework.security.authentication.DisabledException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            log.error("Erreur inattendue lors de la connexion: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("error", "Une erreur est survenue lors de la connexion. Veuillez réessayer."));
         }
     }
     

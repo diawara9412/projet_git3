@@ -36,15 +36,20 @@ public class ClientAuthService {
         Client client = clientRepository.findByEmailOrIdentifiant(
             request.getIdentifiant(), 
             request.getIdentifiant()
-        ).orElseThrow(() -> new BadCredentialsException("Identifiant ou mot de passe incorrect"));
+        ).orElseThrow(() -> {
+            log.warn("Tentative de connexion échouée: identifiant '{}' introuvable", request.getIdentifiant());
+            return new BadCredentialsException("Identifiant ou mot de passe incorrect");
+        });
         
         // Vérifier si le compte est actif
         if (!client.getActive()) {
+            log.warn("Tentative de connexion avec compte désactivé: {}", client.getIdentifiant());
             throw new DisabledException("Votre compte a été désactivé. Contactez l'administration.");
         }
         
         // Vérifier le mot de passe
         if (!passwordEncoder.matches(request.getPassword(), client.getPassword())) {
+            log.warn("Tentative de connexion avec mot de passe incorrect pour le client: {}", client.getIdentifiant());
             throw new BadCredentialsException("Identifiant ou mot de passe incorrect");
         }
         
@@ -61,7 +66,7 @@ public class ClientAuthService {
         // Générer le token JWT
         String jwt = tokenProvider.generateClientToken(clientDetails);
         
-        log.info("Client connecté: {}", client.getIdentifiant());
+        log.info("Client connecté avec succès: {} ({})", client.getIdentifiant(), client.getEmail());
         
         return ClientLoginResponse.builder()
                 .id(client.getId())

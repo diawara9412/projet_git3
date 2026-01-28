@@ -86,8 +86,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || "Identifiant ou mot de passe incorrect")
+      let errorMessage = "Identifiant ou mot de passe incorrect"
+      try {
+        const errorData = await response.json()
+        if (errorData.error) {
+          errorMessage = errorData.error
+        } else if (errorData.message) {
+          errorMessage = errorData.message
+        }
+      } catch (e) {
+        // Si la réponse n'est pas JSON, utiliser le message par défaut
+        console.error("Error parsing error response:", e)
+      }
+      throw new Error(errorMessage)
     }
 
     const data = await response.json()

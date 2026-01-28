@@ -91,12 +91,16 @@ public class ClientService {
             try {
                 emailService.sendClientCredentials(savedClient, plainPassword);
                 savedClient.setCredentialsSent(true);
-                clientRepository.save(savedClient);
-                log.info("Identifiants envoyés au client: {}", savedClient.getIdentifiant());
+                savedClient = clientRepository.save(savedClient);
+                log.info("Identifiants envoyés avec succès au client: {}", savedClient.getIdentifiant());
             } catch (Exception e) {
-                log.error("Erreur lors de l'envoi de l'email: {}", e.getMessage());
-                // On ne bloque pas la création si l'email échoue
+                log.error("Erreur lors de l'envoi de l'email au client {}: {}", 
+                    savedClient.getIdentifiant(), e.getMessage(), e);
+                // On ne bloque pas la création si l'email échoue, mais on garde credentialsSent=false
             }
+        } else {
+            log.info("Email non envoyé pour le client {}: email={}, sendCredentials={}", 
+                savedClient.getIdentifiant(), request.getEmail(), request.getSendCredentials());
         }
         
         return savedClient;
