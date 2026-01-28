@@ -40,6 +40,10 @@ public class AuthController {
     private static final String JWT_COOKIE_NAME = "auth_token";
     private static final int COOKIE_MAX_AGE = 24 * 60 * 60; // 24 hours
 
+    /**
+     * Unified login endpoint for both staff and clients.
+     * Accepts email or identifiant for login.
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         try {
@@ -55,61 +59,28 @@ public class AuthController {
                 "prenom", loginResponse.getPrenom(),
                 "email", loginResponse.getEmail(),
                 "role", loginResponse.getRole(),
+                "identifiant", loginResponse.getIdentifiant() != null ? loginResponse.getIdentifiant() : loginResponse.getEmail(),
                 "message", loginResponse.getMessage()
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * Endpoint de connexion pour les clients et admins (client-portal).
-     * Accepte les connexions d'admins et de clients.
+     * Endpoint de connexion pour les clients (client-portal).
+     * Redirige vers le login unifié.
      */
     @PostMapping("/client/login")
     public ResponseEntity<?> clientLogin(@Valid @RequestBody ClientLoginRequest request, HttpServletResponse response) {
         try {
-            // Tenter d'abord la connexion en tant que client
-            try {
-                ClientLoginResponse clientResponse = clientAuthService.login(request);
-                
-                // Set JWT in HttpOnly cookie
-                setAuthCookie(response, clientResponse.getToken());
-                
-                return ResponseEntity.ok(Map.of(
-                    "id", clientResponse.getId(),
-                    "identifiant", clientResponse.getIdentifiant(),
-                    "nom", clientResponse.getNom(),
-                    "prenom", clientResponse.getPrenom(),
-                    "email", clientResponse.getEmail(),
-                    "role", clientResponse.getRole(),
-                    "message", clientResponse.getMessage()
-                ));
-            } catch (Exception clientEx) {
-                // Si la connexion client échoue, tenter avec les utilisateurs (admin/staff)
-                try {
-                    LoginRequest staffRequest = new LoginRequest();
-                    staffRequest.setEmail(request.getIdentifiant());
-                    staffRequest.setPassword(request.getPassword());
-                    LoginResponse staffResponse = authService.login(staffRequest);
-                    
-                    // Set JWT in HttpOnly cookie
-                    setAuthCookie(response, staffResponse.getToken());
-                    
-                    return ResponseEntity.ok(Map.of(
-                        "id", staffResponse.getId(),
-                        "identifiant", staffResponse.getEmail(),
-                        "nom", staffResponse.getNom(),
-                        "prenom", staffResponse.getPrenom(),
-                        "email", staffResponse.getEmail(),
-                        "role", staffResponse.getRole(),
-                        "message", staffResponse.getMessage()
-                    ));
-                } catch (Exception staffEx) {
-                    // Si les deux échouent, retourner l'erreur du client
-                    throw clientEx;
-                }
-            }
+            // Convert ClientLoginRequest to LoginRequest
+            LoginRequest loginRequest = new LoginRequest();
+            loginRequest.setEmail(request.getIdentifiant()); // identifiant can be email or CLT-XXXXX
+            loginRequest.setPassword(request.getPassword());
+            
+            // Use unified login
+            return login(loginRequest, response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

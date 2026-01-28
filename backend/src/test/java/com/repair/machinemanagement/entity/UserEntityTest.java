@@ -35,10 +35,11 @@ class UserEntityTest {
 
     @Test
     void testUserRoles() {
-        assertEquals(3, User.Role.values().length);
+        assertEquals(4, User.Role.values().length);
         assertTrue(User.Role.valueOf("ADMIN") instanceof User.Role);
         assertTrue(User.Role.valueOf("SECRETAIRE") instanceof User.Role);
         assertTrue(User.Role.valueOf("TECHNICIEN") instanceof User.Role);
+        assertTrue(User.Role.valueOf("CLIENT") instanceof User.Role);
     }
 
     @Test

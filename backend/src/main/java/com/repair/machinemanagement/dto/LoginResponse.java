@@ -14,6 +14,7 @@ public class LoginResponse {
     private String nom;
     private String prenom;
     private String email;
+    private String identifiant; // For CLIENT role users
     private String role;
     private String token;
     private String message;

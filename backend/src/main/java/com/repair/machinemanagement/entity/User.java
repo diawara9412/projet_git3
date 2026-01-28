@@ -50,6 +50,14 @@ public class User {
     @Column(nullable = false)
     private Role role;
     
+    // For CLIENT role: unique client identifier (e.g., CLT-00001)
+    @Column(unique = true)
+    private String identifiant;
+    
+    // For CLIENT role: indicates if credentials have been sent by email
+    @Column(name = "credentials_sent")
+    private Boolean credentialsSent = false;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
@@ -70,6 +78,6 @@ public class User {
     }
     
     public enum Role {
-        ADMIN, SECRETAIRE, TECHNICIEN
+        ADMIN, SECRETAIRE, TECHNICIEN, CLIENT
     }
 }

@@ -72,14 +72,14 @@ public class DataInitializer implements CommandLineRunner {
                 log.info("Administrateur déjà existant");
             }
             
-            // Créer un client de test si aucun client n'existe
+            // Créer un utilisateur client de test si aucun n'existe
             log.info("Vérification de l'existence du client CLT-00001...");
-            boolean clientExists = clientRepository.existsByIdentifiant("CLT-00001");
-            log.info("Client CLT-00001 existe déjà: {}", clientExists);
+            boolean clientUserExists = userRepository.existsByIdentifiant("CLT-00001");
+            log.info("Client utilisateur CLT-00001 existe déjà: {}", clientUserExists);
             
-            if (!clientExists) {
-                log.info("Création du client de test CLT-00001...");
-                Client testClient = Client.builder()
+            if (!clientUserExists) {
+                log.info("Création du client de test CLT-00001 dans la table users...");
+                User testClientUser = User.builder()
                         .nom("Test")
                         .prenom("Client")
                         .adresse("456 Avenue de Test, 75002 Paris")
@@ -87,45 +87,48 @@ public class DataInitializer implements CommandLineRunner {
                         .email("client.test@example.com")
                         .identifiant("CLT-00001")
                         .password(passwordEncoder.encode("test123"))
+                        .role(User.Role.CLIENT)
                         .active(true)
                         .credentialsSent(false)
                         .build();
                 
-                Client saved = clientRepository.save(testClient);
-                clientRepository.flush(); // Force la persistence
+                User saved = userRepository.save(testClientUser);
+                userRepository.flush(); // Force la persistence
                 
                 // Vérifier immédiatement que le client a été sauvegardé
-                log.info("Client de test sauvegardé avec ID: {}", saved.getId());
+                log.info("Client utilisateur de test sauvegardé avec ID: {}", saved.getId());
                 
                 // Double vérification
-                boolean nowExists = clientRepository.existsByIdentifiant("CLT-00001");
-                log.info("Vérification après création: Client CLT-00001 existe = {}", nowExists);
+                boolean nowExists = userRepository.existsByIdentifiant("CLT-00001");
+                log.info("Vérification après création: Client utilisateur CLT-00001 existe = {}", nowExists);
                 
                 // Triple vérification par recherche directe
-                Optional<Client> foundClient = clientRepository.findByIdentifiant("CLT-00001");
-                log.info("Recherche directe après création: {}", foundClient.isPresent() ? "trouvé" : "NON TROUVÉ");
+                Optional<User> foundClientUser = userRepository.findByIdentifiant("CLT-00001");
+                log.info("Recherche directe après création: {}", foundClientUser.isPresent() ? "trouvé" : "NON TROUVÉ");
                 
-                System.out.println("✔ Client de test créé automatiquement !");
+                System.out.println("✔ Client de test créé automatiquement dans la table users!");
                 System.out.println("   Identifiant: CLT-00001");
                 System.out.println("   Email: client.test@example.com");
                 System.out.println("   Mot de passe: test123");
             } else {
                 System.out.println("✔ Client de test déjà existant, création ignorée.");
-                log.info("Client CLT-00001 déjà existant dans la base");
+                log.info("Client utilisateur CLT-00001 déjà existant dans la base");
                 
                 // Vérifier qu'on peut bien le trouver
-                Optional<Client> foundClient = clientRepository.findByIdentifiant("CLT-00001");
-                log.info("Test de recherche du client existant: {}", foundClient.isPresent() ? "trouvé" : "NON TROUVÉ");
-                if (foundClient.isPresent()) {
-                    Client c = foundClient.get();
-                    log.info("Détails: ID={}, Nom={} {}, Email={}, Active={}", 
-                        c.getId(), c.getNom(), c.getPrenom(), c.getEmail(), c.getActive());
+                Optional<User> foundClientUser = userRepository.findByIdentifiant("CLT-00001");
+                log.info("Test de recherche du client utilisateur existant: {}", foundClientUser.isPresent() ? "trouvé" : "NON TROUVÉ");
+                if (foundClientUser.isPresent()) {
+                    User c = foundClientUser.get();
+                    log.info("Détails: ID={}, Identifiant={}, Nom={} {}, Email={}, Role={}, Active={}", 
+                        c.getId(), c.getIdentifiant(), c.getNom(), c.getPrenom(), c.getEmail(), c.getRole(), c.getActive());
                 }
             }
             
             // Afficher l'état final
+            long finalUserCount = userRepository.count();
             long finalClientCount = clientRepository.count();
-            log.info("Nombre final de clients dans la base: {}", finalClientCount);
+            log.info("Nombre final d'utilisateurs dans la base: {}", finalUserCount);
+            log.info("Nombre final de clients (ancienne table) dans la base: {}", finalClientCount);
             
         } catch (Exception e) {
             log.error("ERREUR dans DataInitializer: ", e);
