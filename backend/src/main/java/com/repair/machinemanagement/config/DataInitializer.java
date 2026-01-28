@@ -5,12 +5,14 @@ import com.repair.machinemanagement.entity.User;
 import com.repair.machinemanagement.repository.ClientRepository;
 import com.repair.machinemanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -35,6 +37,7 @@ public class DataInitializer implements CommandLineRunner {
                     .build();
 
             userRepository.save(admin);
+            userRepository.flush(); // Force la persistence
 
             System.out.println("✔ Administrateur créé automatiquement !");
             System.out.println("   Email: admin@repair.com");
@@ -59,7 +62,15 @@ public class DataInitializer implements CommandLineRunner {
                     .credentialsSent(false)
                     .build();
             
-            clientRepository.save(testClient);
+            Client saved = clientRepository.save(testClient);
+            clientRepository.flush(); // Force la persistence
+            
+            // Vérifier immédiatement que le client a été sauvegardé
+            log.info("Client de test sauvegardé avec ID: {}", saved.getId());
+            
+            // Double vérification
+            boolean nowExists = clientRepository.existsByIdentifiant("CLT-00001");
+            log.info("Vérification: Client CLT-00001 existe = {}", nowExists);
             
             System.out.println("✔ Client de test créé automatiquement !");
             System.out.println("   Identifiant: CLT-00001");
@@ -67,6 +78,7 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("   Mot de passe: test123");
         } else {
             System.out.println("✔ Client de test déjà existant, création ignorée.");
+            log.info("Client CLT-00001 déjà existant dans la base");
         }
     }
 }

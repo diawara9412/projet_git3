@@ -29,7 +29,8 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     Optional<Client> findByIdentifiant(String identifiant);
 
     // Recherche par email ou identifiant pour la connexion
-    Optional<Client> findByEmailOrIdentifiant(String email, String identifiant);
+    @Query("SELECT c FROM Client c WHERE c.email = :login OR c.identifiant = :login")
+    Optional<Client> findByEmailOrIdentifiant(@Param("login") String email, @Param("login") String identifiant);
 
     @Query("SELECT c FROM Client c WHERE c.nom LIKE %:keyword% OR c.prenom LIKE %:keyword%")
     List<Client> searchClients(@Param("keyword") String keyword);

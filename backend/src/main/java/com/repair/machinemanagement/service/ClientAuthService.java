@@ -16,6 +16,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 /**
  * Service d'authentification pour les clients.
  */
@@ -32,14 +34,25 @@ public class ClientAuthService {
      * Authentifie un client avec son identifiant/email et mot de passe.
      */
     public ClientLoginResponse login(ClientLoginRequest request) {
-        log.debug("Tentative de connexion avec identifiant: {}", request.getIdentifiant());
+        String loginValue = request.getIdentifiant().trim(); // Trim whitespace
+        log.debug("Tentative de connexion avec identifiant: '{}'", loginValue);
+        log.debug("Longueur de l'identifiant: {}", loginValue.length());
         
         // Rechercher le client par email ou identifiant
         Client client = clientRepository.findByEmailOrIdentifiant(
-            request.getIdentifiant(), 
-            request.getIdentifiant()
+            loginValue, 
+            loginValue
         ).orElseThrow(() -> {
-            log.warn("Client non trouvé avec identifiant: {}", request.getIdentifiant());
+            log.warn("Client non trouvé avec identifiant: '{}'", loginValue);
+            // Test de debug: essayer de chercher uniquement par identifiant
+            Optional<Client> byId = clientRepository.findByIdentifiant(loginValue);
+            log.warn("Recherche par identifiant seul: {}", byId.isPresent() ? "trouvé" : "non trouvé");
+            // Test de debug: essayer de chercher uniquement par email
+            Optional<Client> byEmail = clientRepository.findByEmail(loginValue);
+            log.warn("Recherche par email seul: {}", byEmail.isPresent() ? "trouvé" : "non trouvé");
+            // Compter les clients
+            long count = clientRepository.count();
+            log.warn("Nombre total de clients dans la base: {}", count);
             return new BadCredentialsException("Identifiant ou mot de passe incorrect");
         });
         
