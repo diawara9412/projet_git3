@@ -83,8 +83,14 @@ public class EmailService {
 
     /**
      * Crée un email de secours simple si le template Thymeleaf échoue.
+     * @param client Le client pour lequel créer l'email
+     * @param plainPassword Le mot de passe en clair à inclure dans l'email
+     * @return Le contenu HTML de l'email de secours
      */
     private String createFallbackCredentialsEmail(Client client, String plainPassword) {
+        String prenom = client.getPrenom() != null ? client.getPrenom() : "";
+        String nom = client.getNom() != null ? client.getNom() : "";
+        
         return String.format("""
             <html>
             <body>
@@ -100,7 +106,7 @@ public class EmailService {
             </body>
             </html>
             """, 
-            appName, client.getPrenom(), client.getNom(), 
+            appName, prenom, nom, 
             client.getIdentifiant(), plainPassword,
             frontendUrl, frontendUrl,
             appName

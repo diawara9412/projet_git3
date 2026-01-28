@@ -18,6 +18,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -87,10 +89,10 @@ public class AuthController {
                     "role", clientResponse.getRole(),
                     "message", clientResponse.getMessage()
                 ));
-            } catch (org.springframework.security.authentication.DisabledException e) {
+            } catch (DisabledException e) {
                 // Compte désactivé - message spécifique
                 return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-            } catch (org.springframework.security.authentication.BadCredentialsException clientEx) {
+            } catch (BadCredentialsException clientEx) {
                 // Si la connexion client échoue, tenter avec les utilisateurs (admin/staff)
                 try {
                     LoginRequest staffRequest = new LoginRequest();
@@ -110,18 +112,21 @@ public class AuthController {
                         "role", staffResponse.getRole(),
                         "message", staffResponse.getMessage()
                     ));
+                } catch (DisabledException staffDisabledEx) {
+                    // Staff account disabled
+                    return ResponseEntity.status(403).body(Map.of("error", staffDisabledEx.getMessage()));
+                } catch (BadCredentialsException staffEx) {
+                    // Both client and staff login failed - return bad credentials
+                    return ResponseEntity.status(401).body(Map.of("error", clientEx.getMessage()));
                 } catch (Exception staffEx) {
-                    // Si les deux échouent, retourner l'erreur du client
-                    throw clientEx;
+                    // Other staff login errors
+                    log.error("Erreur lors de la connexion staff: {}", staffEx.getMessage(), staffEx);
+                    return ResponseEntity.status(401).body(Map.of("error", "Identifiant ou mot de passe incorrect"));
                 }
             }
-        } catch (org.springframework.security.authentication.DisabledException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (org.springframework.security.authentication.BadCredentialsException e) {
-            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Erreur inattendue lors de la connexion: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(Map.of("error", "Une erreur est survenue lors de la connexion. Veuillez réessayer."));
+            return ResponseEntity.status(500).body(Map.of("error", "Une erreur est survenue. Veuillez réessayer ou contacter l'assistance."));
         }
     }
     

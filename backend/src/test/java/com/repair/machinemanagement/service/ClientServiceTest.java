@@ -95,7 +95,8 @@ class ClientServiceTest {
         assertEquals("Dupont", created.getNom());
         // credentialsSent should remain false when email fails
         assertFalse(created.getCredentialsSent());
-        verify(clientRepository, times(1)).save(any(Client.class)); // Only creation save, not update
+        // Client is saved only once (initial creation), not again after failed email
+        verify(clientRepository, times(1)).save(any(Client.class));
         verify(emailService).sendClientCredentials(any(Client.class), anyString());
     }
 
